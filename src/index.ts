@@ -6,18 +6,19 @@ type Books = {
   img: string;
 }[];
 
-export const getCurrentlyReading = async (
-  username: string,
-  page = 1
-): Promise<Books> => {
-  const response = await fetch(
-    `https://app.thestorygraph.com/currently-reading/${username}?page=${page}`
-    // `https://app.thestorygraph.com/books-read/${username}?page=${page}`
-  );
+type BooksResponse = Promise<{
+  books: Books;
+  totalBookCount: number;
+  currentPage: number;
+  nextPage: number | null;
+}>;
+
+const getBooksResponse = async (url: string, page: number): BooksResponse => {
+  const response = await fetch(url);
   const html = await response.text();
   const { document } = new JSDOM(html).window;
 
-  const bookCount =
+  const totalBookCount =
     Number(
       document
         .querySelector(".search-results-count")
@@ -43,13 +44,29 @@ export const getCurrentlyReading = async (
     return { title, author, img };
   });
 
-  if (bookCount > page * 10) {
-    return [...books, ...(await getCurrentlyReading(username, page + 1))];
-  }
-
-  return books;
+  return {
+    books,
+    totalBookCount,
+    currentPage: page,
+    nextPage: totalBookCount > page * 10 ? page + 1 : null,
+  };
 };
 
-void (async () => {
-  console.log(await getCurrentlyReading("paigevogie"));
-})();
+const baseUrl = "https://app.thestorygraph.com";
+
+const getBooksCurrentlyReading = async (
+  username: string,
+  page = 1
+): BooksResponse =>
+  getBooksResponse(
+    `${baseUrl}/currently-reading/${username}?page=${page}`,
+    page
+  );
+
+const getBooksRead = async (username: string, page = 1): BooksResponse =>
+  getBooksResponse(`${baseUrl}/books-read/${username}?page=${page}`, page);
+
+const getBooksToRead = async (username: string, page = 1): BooksResponse =>
+  getBooksResponse(`${baseUrl}/to-read/${username}?page=${page}`, page);
+
+export { getBooksCurrentlyReading, getBooksRead, getBooksToRead };
