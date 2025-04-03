@@ -1,10 +1,11 @@
 {
-  "name": "storygraph",
+  "name": "storygraph-js",
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "description": "A JavaScript client to fetch data from [The StoryGraph](https://www.thestorygraph.com).",
   "author": "@paigevogie",
   "type": "module",
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/paigevogie/storygraph-js.git"
@@ -15,9 +16,7 @@
   "homepage": "https://github.com/paigevogie/storygraph-js#readme",
   "scripts": {
     "build": "npx tsc",
-    "clean": "rm -rf ./build",
-    "watch": "npx tsc --watch ./src/index.ts",
-    "dev": "npm run build && node ./build/index.js",
+    "clean": "rm -rf ./dist",
     "test": "jest",
     "lint": "npx eslint ./src",
     "prepare": "husky"
@@ -26,7 +25,7 @@
     "./src/**/*.ts": "eslint --fix"
   },
   "dependencies": {
-    "jsdom": "^26.0.0"
+    "cheerio": "^1.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

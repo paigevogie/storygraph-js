@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
     "target": "ES6",
-    "outDir": "build",
+    "outDir": "dist",
     "lib": ["ES6"],
     "types": ["node", "jest", "jsdom"],
     "module": "preserve",
     "moduleResolution": "bundler",
     "strictNullChecks": true
   },
-  "include": ["src/"]
+  "include": ["src"]
 }

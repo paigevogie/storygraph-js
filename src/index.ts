@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
 
 type Books = {
   title: string;
@@ -6,50 +6,63 @@ type Books = {
   img: string;
 }[];
 
-export const getCurrentlyReading = async (
-  username: string,
-  page = 1
-): Promise<Books> => {
-  const response = await fetch(
-    `https://app.thestorygraph.com/currently-reading/${username}?page=${page}`
-    // `https://app.thestorygraph.com/books-read/${username}?page=${page}`
-  );
-  const html = await response.text();
-  const { document } = new JSDOM(html).window;
+type BooksResponse = Promise<{
+  books: Books;
+  totalBookCount: number;
+  currentPage: number;
+  nextPage: number | null;
+}>;
 
-  const bookCount =
-    Number(
-      document
-        .querySelector(".search-results-count")
-        ?.textContent?.replace(" books", "")
-    ) || 0;
+const getBooksResponse = async (url: string, page: number): BooksResponse => {
+  const response = await fetch(url);
+  const html = await response.text();
+  const $ = cheerio.load(html);
+
+  const totalBookCount =
+    Number($(".search-results-count")?.text()?.replace(" books", "")) || 0;
 
   // filter out duplicate book nodes with md:hidden class
-  const bookNodes = document.querySelectorAll(
+  const bookNodes = $(
     ".book-pane div:not([class*='md:hidden']) .book-pane-content"
   );
 
   const books: Books = [...bookNodes].map((bookNode) => {
     const title =
-      bookNode.querySelector(".book-title-author-and-series a[href*='/books/']")
-        ?.textContent || "";
+      $(bookNode)
+        .find(".book-title-author-and-series a[href*='/books/']")
+        ?.text() || "";
     const author =
-      bookNode.querySelector(
-        ".book-title-author-and-series a[href*='/authors/']"
-      )?.textContent || "";
-    const img =
-      bookNode.querySelector(".book-cover img")?.getAttribute("src") || "";
+      $(bookNode)
+        .find(".book-title-author-and-series a[href*='/authors/']")
+        ?.text() || "";
+    const img = $(bookNode).find(".book-cover img")?.attr("src") || "";
 
     return { title, author, img };
   });
 
-  if (bookCount > page * 10) {
-    return [...books, ...(await getCurrentlyReading(username, page + 1))];
-  }
-
-  return books;
+  return {
+    books,
+    totalBookCount,
+    currentPage: page,
+    nextPage: totalBookCount > page * 10 ? page + 1 : null,
+  };
 };
 
-void (async () => {
-  console.log(await getCurrentlyReading("paigevogie"));
-})();
+const baseUrl = "https://app.thestorygraph.com";
+
+const getBooksCurrentlyReading = async (
+  username: string,
+  page = 1
+): BooksResponse =>
+  getBooksResponse(
+    `${baseUrl}/currently-reading/${username}?page=${page}`,
+    page
+  );
+
+const getBooksRead = async (username: string, page = 1): BooksResponse =>
+  getBooksResponse(`${baseUrl}/books-read/${username}?page=${page}`, page);
+
+const getBooksToRead = async (username: string, page = 1): BooksResponse =>
+  getBooksResponse(`${baseUrl}/to-read/${username}?page=${page}`, page);
+
+export { getBooksCurrentlyReading, getBooksRead, getBooksToRead };
