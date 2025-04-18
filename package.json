@@ -1,6 +1,6 @@
 {
   "name": "storygraph-js",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "GPL-3.0-or-later",
   "description": "A JavaScript client to fetch data from [The StoryGraph](https://www.thestorygraph.com).",
   "author": "@paigevogie",
@@ -19,7 +19,8 @@
     "clean": "rm -rf ./dist",
     "test": "jest",
     "lint": "npx eslint ./src",
-    "prepare": "husky"
+    "prepare": "husky",
+    "local": "npm run build && node local.js"
   },
   "lint-staged": {
     "./src/**/*.ts": "eslint --fix"

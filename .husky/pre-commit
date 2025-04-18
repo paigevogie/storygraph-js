@@ -1,1 +1,1 @@
-lint-staged
+echo 'Linting staged files...' && lint-staged

@@ -4,6 +4,8 @@ type Books = {
   title: string;
   author: string;
   img: string;
+  url: string;
+  rating?: string;
 }[];
 
 type BooksResponse = Promise<{
@@ -12,6 +14,8 @@ type BooksResponse = Promise<{
   currentPage: number;
   nextPage: number | null;
 }>;
+
+const baseUrl = "https://app.thestorygraph.com";
 
 const getBooksResponse = async (url: string, page: number): BooksResponse => {
   const response = await fetch(url);
@@ -36,8 +40,14 @@ const getBooksResponse = async (url: string, page: number): BooksResponse => {
         .find(".book-title-author-and-series a[href*='/authors/']")
         ?.text() || "";
     const img = $(bookNode).find(".book-cover img")?.attr("src") || "";
+    const url =
+      baseUrl +
+        $(bookNode)
+          .find(".book-title-author-and-series a[href*='/books/']")
+          ?.attr("href") || "";
+    const rating = $(bookNode).find(".icon-star + span").text() || "";
 
-    return { title, author, img };
+    return { title, author, img, url, ...(rating && { rating }) };
   });
 
   return {
@@ -47,8 +57,6 @@ const getBooksResponse = async (url: string, page: number): BooksResponse => {
     nextPage: totalBookCount > page * 10 ? page + 1 : null,
   };
 };
-
-const baseUrl = "https://app.thestorygraph.com";
 
 const getBooksCurrentlyReading = async (
   username: string,
